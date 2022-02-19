@@ -79,8 +79,10 @@ class Configures:
 
     def write(self, isReset=False, fileName='config.dat'):
         if isReset:
-            self.gameDir = StringVar(value="C:/Program Files (x86)/Steam/steamapps/common/RimWorld")
-            self.modDir = StringVar(value="C:/Program Files (x86)/Steam/steamapps/workshop/content/294100")
+            self.gameDir = StringVar(
+                value="C:/Program Files (x86)/Steam/steamapps/common/RimWorld")
+            self.modDir = StringVar(
+                value="C:/Program Files (x86)/Steam/steamapps/workshop/content/294100")
             self.definedExcludes = []
             self.definedIncludes = "label/description/customLabel/rulesStrings/slateRef/reportString/jobString/verb/labelNoun" \
                                    "/gerund/helpText/letterText/labelFemale/labelPlural/text/labelShort/letterLabel" \
@@ -96,7 +98,8 @@ class Configures:
                                    "/calledOffMessage/finishedMessage/discoverLetterLabel/discoverLetterText" \
                                    "/discoveredLetterText/discoveredLetterTitle/instantlyPermanentLabel/letter/adjective" \
                                    "/labelFemalePlural/successfullyRemovedHediffMessage/offMessage/ingestReportStringEat" \
-                                   "/renounceTitleMessage/royalFavorLabel/letterTitle".split('/')
+                                   "/renounceTitleMessage/royalFavorLabel/letterTitle".split(
+                                       '/')
             self.exportType = IntVar(value=0)
             self.collisionOption = IntVar(value=0)
 
@@ -253,10 +256,12 @@ def convertXML2XLSX(dirname):
                 xmlDict[className][nodeName] = translation
 
     for className, nodeDict in xmlDict.items():
-        saveDir = '/'.join(dirname.split('/')[:-1]) + f'/Languages/{LANGUAGE}/DefInjected/{className}'
+        saveDir = '/'.join(dirname.split('/')
+                           [:-1]) + f'/Languages/{LANGUAGE}/DefInjected/{className}'
         Path(saveDir).mkdir(parents=True, exist_ok=True)
         with open(f"{saveDir}/{dirname.split('/')[-1].split('.')[0] + '.xml'}", 'w', encoding='UTF8') as fout:
-            fout.write("""<?xml version="1.0" encoding="utf-8"?>\n<LanguageData>\n""")
+            fout.write(
+                """<?xml version="1.0" encoding="utf-8"?>\n<LanguageData>\n""")
             for nodeName, translation in nodeDict.items():
                 fout.write(f'  <{nodeName}>{translation}</{nodeName}>\n')
             fout.write("</LanguageData>")
@@ -289,7 +294,8 @@ def convertXLSX2XML(filename):
             saveDir = f'{modName}/Languages/{LANGUAGE}/DefInjected/{className}'
         Path(saveDir).mkdir(parents=True, exist_ok=True)
         with open(f"{saveDir}/{modName}.xml", 'w', encoding='UTF8') as fout:
-            fout.write("""<?xml version="1.0" encoding="utf-8"?>\n<LanguageData>\n""")
+            fout.write(
+                """<?xml version="1.0" encoding="utf-8"?>\n<LanguageData>\n""")
             for nodeName, translation in nodeDict.items():
                 fout.write(f'  <{nodeName}>{translation}</{nodeName}>\n')
             fout.write("</LanguageData>")
@@ -383,25 +389,31 @@ def loadSelectMod(window):
     textLabel2.grid(row=0, column=1, sticky='NSWE', padx=5, pady=5)
 
     dirList = StringVar()
-    dirListBox = Listbox(frame, selectmode='multiple', selectborderwidth=10, listvariable=dirList)
+    dirListBox = Listbox(frame, selectmode='multiple',
+                         selectborderwidth=10, listvariable=dirList)
     dirListBox.grid(row=1, column=1, sticky='NSWE')
 
     extractButton = Button(frame, text="선택한 폴더의 노드 추출")
     extractButton.grid(row=2, column=1)
 
-    corePathList = [p.replace('\\', '/') for p in glob.glob(Config.gameDir.get() + '/Data/*') if os.path.isdir(p)]
-    manualModPathList = [p.replace('\\', '/') for p in glob.glob(Config.gameDir.get() + '/Mods/*') if os.path.isdir(p)]
-    workshopModPathList = [p.replace('\\', '/') for p in glob.glob(Config.modDir.get() + '/*') if os.path.isdir(p)]
+    corePathList = [p.replace(
+        '\\', '/') for p in glob.glob(Config.gameDir.get() + '/Data/*') if os.path.isdir(p)]
+    manualModPathList = [p.replace(
+        '\\', '/') for p in glob.glob(Config.gameDir.get() + '/Mods/*') if os.path.isdir(p)]
+    workshopModPathList = [p.replace(
+        '\\', '/') for p in glob.glob(Config.modDir.get() + '/*') if os.path.isdir(p)]
 
     if not (corePathList + manualModPathList + workshopModPathList):  # If No Mod
-        messagebox.showerror("모드 폴더 찾을 수 없음", "선택한 폴더에 어떤 하위 폴더도 존재하지 않습니다.\n프로그램을 종료합니다.")
+        messagebox.showerror(
+            "모드 폴더 찾을 수 없음", "선택한 폴더에 어떤 하위 폴더도 존재하지 않습니다.\n프로그램을 종료합니다.")
         exit(0)
 
     modsNameDict = {}
     sep = ' | '
     for modPath in corePathList:
         try:
-            pakageID = et.parse(modPath + '/About/About.xml').getroot().find('packageId').text
+            pakageID = et.parse(
+                modPath + '/About/About.xml').getroot().find('packageId').text
         except (FileNotFoundError, ValueError, AttributeError, et.ParseError):
             pakageID = "NULL"
         modsNameDict[f"    CORE   {sep}{modPath.split('/')[-1]}"] = modPath, f"{modPath.split('/')[-1]}", pakageID
@@ -415,11 +427,13 @@ def loadSelectMod(window):
             except (FileNotFoundError, ValueError):
                 code = " ??????????"
         try:
-            pakageID = et.parse(modPath + '/About/About.xml').getroot().find('packageId').text
+            pakageID = et.parse(
+                modPath + '/About/About.xml').getroot().find('packageId').text
         except (FileNotFoundError, ValueError, AttributeError, et.ParseError):
             pakageID = "NULL(About.xml ERROR)"
         try:
-            name = et.parse(modPath + '/About/About.xml').getroot().find('name').text
+            name = et.parse(
+                modPath + '/About/About.xml').getroot().find('name').text
         except (FileNotFoundError, ValueError, AttributeError, et.ParseError):
             name = "#UNKNOWN# (About.xml ERROR)"
         modsNameDict[f"{code}{sep}{name}"] = modPath, f"{name} - {code.replace(' ', '')}", pakageID
@@ -436,7 +450,8 @@ def loadSelectMod(window):
     def onModSelect(evt):
         try:
             nonlocal modName, pakageID
-            modPath, modName, pakageID = modsNameDict[evt.widget.get(int(evt.widget.curselection()[0]))]
+            modPath, modName, pakageID = modsNameDict[evt.widget.get(
+                int(evt.widget.curselection()[0]))]
         except IndexError:
             return
 
@@ -444,19 +459,22 @@ def loadSelectMod(window):
         extractableDirNameList.clear()
         autoSelectIndices = []
         try:
-            modVersionNodeList = list(et.parse(f'{modPath}/LoadFolders.xml').getroot())
+            modVersionNodeList = list(
+                et.parse(f'{modPath}/LoadFolders.xml').getroot())
             for eachVersionNode in modVersionNodeList:
                 for eachLoad in list(eachVersionNode):
                     if not eachLoad.text:
                         eachLoad.text = ""
-                    path = os.path.join(modPath, eachLoad.text) if eachLoad.text != '/' else modPath
+                    path = os.path.join(
+                        modPath, eachLoad.text) if eachLoad.text != '/' else modPath
                     try:
                         attr = eachLoad.attrib['IfModActive']
                     except KeyError:
                         attr = ""
                     for eachType in os.listdir(path):
                         if eachType in EXTRACTABLE_DIRS:
-                            extractableDirPathList.append(os.path.join(path, eachType))
+                            extractableDirPathList.append(
+                                os.path.join(path, eachType))
                             if eachType == "Languages":
                                 eachType = "Keyed/Strings"
                             name = f"{eachVersionNode.tag} - {eachType}"
@@ -464,20 +482,25 @@ def loadSelectMod(window):
                                 name = f"{name} [모드 의존성: {attr}]"
                             extractableDirNameList.append(name)
                             if RIMWORLD_VERSION in eachVersionNode.tag or 'default' in eachVersionNode.tag:
-                                autoSelectIndices.append(len(extractableDirNameList) - 1)
+                                autoSelectIndices.append(
+                                    len(extractableDirNameList) - 1)
 
         except (FileNotFoundError, et.ParseError):
             for eachLoad in [modPath] + glob.glob(f"{modPath}/*"):
                 if os.path.isdir(eachLoad):
                     for eachType in os.listdir(eachLoad):
                         if eachType in EXTRACTABLE_DIRS:
-                            extractableDirPathList.append(os.path.join(eachLoad, eachType))
-                            ver = eachLoad.split('\\')[-1] if eachLoad != modPath else "default"
+                            extractableDirPathList.append(
+                                os.path.join(eachLoad, eachType))
+                            ver = eachLoad.split(
+                                '\\')[-1] if eachLoad != modPath else "default"
                             if eachType == "Languages":
                                 eachType = "Keyed/Strings"
-                            extractableDirNameList.append(f"{ver} - {eachType}")
+                            extractableDirNameList.append(
+                                f"{ver} - {eachType}")
                             if RIMWORLD_VERSION in ver or 'default' in ver:
-                                autoSelectIndices.append(len(extractableDirNameList) - 1)
+                                autoSelectIndices.append(
+                                    len(extractableDirNameList) - 1)
 
         dirList.set(extractableDirNameList)
         for i in autoSelectIndices:
@@ -496,26 +519,31 @@ def loadSelectMod(window):
             else:
                 return
 
-        Config.extractPathList = [extractableDirPathList[idx] for idx in dirListBox.curselection()]
+        Config.extractPathList = [extractableDirPathList[idx]
+                                  for idx in dirListBox.curselection()]
         if not Config.extractPathList:
             messagebox.showerror("폴더를 선택하세요", "추출할 폴더를 하나 이상 선택하세요.")
             return
         Config.modName = modName
         Config.pakageID = pakageID
-        Config.exportDirName.set("".join(filter(lambda ch: ch not in "\\/:*?\"<>|", modName)))
-        Config.exportFileName.set("".join(filter(lambda ch: ch not in "\\/:*?\"<>|", modName)))
+        Config.exportDirName.set(
+            "".join(filter(lambda ch: ch not in "\\/:*?\"<>|", modName)))
+        Config.exportFileName.set(
+            "".join(filter(lambda ch: ch not in "\\/:*?\"<>|", modName)))
         updateText()
         window.deiconify()
         frame.destroy()
 
         for extractPath in Config.extractPathList:
             if extractPath.split('\\')[-1] == 'Defs':
-                GoExtractLists = glob.glob(extractPath + "/**/*.xml", recursive=True)
+                GoExtractLists = glob.glob(
+                    extractPath + "/**/*.xml", recursive=True)
                 for path in GoExtractLists:
                     try:
                         extracts = extractDefs(et.parse(path).getroot())
                     except ValueError as e:
-                        messagebox.showerror("에러 발생", str(e) + "\n파일명: " + path)
+                        messagebox.showerror(
+                            "에러 발생", str(e) + "\n파일명: " + path)
                         return
 
                     for className, lastTag, tag, text in extracts:
@@ -533,24 +561,29 @@ def loadSelectMod(window):
                             Config.dict_tags_text[lastTag] = [text]
 
             elif extractPath.split('\\')[-1] == 'Languages':
-                GoExtractLists = glob.glob(extractPath + "\\English\\Keyed\\**\\*.xml", recursive=True)
+                GoExtractLists = glob.glob(
+                    extractPath + "\\English\\Keyed\\**\\*.xml", recursive=True)
                 for path in GoExtractLists:
                     try:
                         nodes = list(et.parse(path).getroot())
                     except ValueError as e:
-                        messagebox.showerror("에러 발생", str(e) + "\n파일명: " + path)
+                        messagebox.showerror(
+                            "에러 발생", str(e) + "\n파일명: " + path)
                         return
                     for node in nodes:
                         dict_keyed[node.tag] = node.text if node.text else ""
-                Config.list_strings = glob.glob(extractPath + "\\English\\Strings\\**\\*.txt", recursive=True)
+                Config.list_strings = glob.glob(
+                    extractPath + "\\English\\Strings\\**\\*.txt", recursive=True)
 
             elif extractPath.split('\\')[-1] == 'Patches':
-                GoExtractLists = glob.glob(extractPath + "/**/*.xml", recursive=True)
+                GoExtractLists = glob.glob(
+                    extractPath + "/**/*.xml", recursive=True)
                 for path in GoExtractLists:
                     try:
                         extracts = extractPatches(et.parse(path).getroot())
                     except ValueError as e:
-                        messagebox.showerror("에러 발생", str(e) + "\n파일명: " + path)
+                        messagebox.showerror(
+                            "에러 발생", str(e) + "\n파일명: " + path)
                         return
                     for extract in extracts:
                         if extract:
@@ -570,7 +603,8 @@ def loadSelectMod(window):
                         else:
                             Config.dict_tags_text[lastTag] = [text]
             else:
-                messagebox.showerror("에러 발생", "Defs, Patches, Keyed, Strings 이외의 폴더는 아직 추출할 수 없습니다.\n자동으로 제외합니다.")
+                messagebox.showerror(
+                    "에러 발생", "Defs, Patches, Keyed, Strings 이외의 폴더는 아직 추출할 수 없습니다.\n자동으로 제외합니다.")
 
         Config.excludes = []
         Config.defaults = sorted(Config.dict_tags_text.keys())
@@ -601,7 +635,8 @@ def loadSelectMod(window):
         modSearch = searchMod.get().lower().replace(' ', '')
 
         if modSearch != "":
-            modShow = [modName for modName in modsNameDictKeys if modSearch in modName.lower().replace(' ', '')]
+            modShow = [modName for modName in modsNameDictKeys if modSearch in modName.lower(
+            ).replace(' ', '')]
         else:
             modShow = modsNameDictKeys
 
@@ -654,7 +689,8 @@ def extractDefs(root):
             if 'Class' in item.attrib:
                 className = item.attrib['Class']
             else:
-                raise ValueError("Def임에도 불구하고 클래스 이름이 없습니다. 오류를 발생시킨 모드 이름과 파일명을 Alpha에게 제보해주세요.")
+                raise ValueError(
+                    "Def임에도 불구하고 클래스 이름이 없습니다. 오류를 발생시킨 모드 이름과 파일명을 Alpha에게 제보해주세요.")
 
         if 'ParentName' in item.attrib and item.attrib['ParentName'] in parentDefs:
             yield from parse_recursive(parentDefs[item.attrib['ParentName']], className, defName)
@@ -788,7 +824,8 @@ def loadSelectTags(window):
             messagebox.showerror("노드 없음",
                                  "추출 가능한 Defs/Patches의 xml이 존재하지 않지만, Keyed/Strings가 존재하므로 노드 분류를 필요로 하지 않습니다. 본 단계를 생략해 주십시오.")
         else:
-            messagebox.showerror("에러 발생", "추출 가능한 xml가 존재하지 않거나, 찾을 수 없습니다.\n모드 선택부터 다시 시도해 주십시오.")
+            messagebox.showerror(
+                "에러 발생", "추출 가능한 xml가 존재하지 않거나, 찾을 수 없습니다.\n모드 선택부터 다시 시도해 주십시오.")
         onDestroy()
         return
 
@@ -806,7 +843,8 @@ def loadSelectTags(window):
         dialog = Toplevel(window)
         dialog.title(tag)
         text = Text(dialog)
-        text.insert(1.0, '\n'.join(sorted(list(set(Config.dict_tags_text[tag])))))
+        text.insert(1.0, '\n'.join(
+            sorted(list(set(Config.dict_tags_text[tag])))))
         text.configure(state='disabled')
         text.bind("<Escape>", lambda x: dialog.destroy())
         text.bind("<q>", lambda x: moveTag(tag, 0, dialog=dialog))
@@ -872,7 +910,8 @@ def loadSelectTags(window):
                 except ValueError:
                     return
 
-        [Config.excludes, Config.defaults, Config.includes][destination].append(toMove)
+        [Config.excludes, Config.defaults,
+            Config.includes][destination].append(toMove)
 
         excludeVar.set(sorted(Config.excludes))
         defaultVar.set(sorted(Config.defaults))
@@ -932,19 +971,24 @@ def loadSelectTags(window):
                          textSearch in text.lower().replace(' ', '')]:
                 filteredTags.extend(tags)
             if tagFlag:
-                filteredTags = [tag for tag in list(set(filteredTags)) if tagSearch in tag.lower().replace(' ', '')]
+                filteredTags = [tag for tag in list(
+                    set(filteredTags)) if tagSearch in tag.lower().replace(' ', '')]
         elif tagFlag:
-            filteredTags = [tag for tag in Config.dict_tags_text.keys() if tagSearch in tag.lower().replace(' ', '')]
+            filteredTags = [tag for tag in Config.dict_tags_text.keys(
+            ) if tagSearch in tag.lower().replace(' ', '')]
 
         if textFlag or tagFlag:
             excludeIntersect = list(set(Config.excludes) & set(filteredTags))
-            Config.excludeHide = [tag for tag in Config.excludes if tag not in excludeIntersect]
+            Config.excludeHide = [
+                tag for tag in Config.excludes if tag not in excludeIntersect]
             Config.excludes = excludeIntersect
             defaultIntersect = list(set(Config.defaults) & set(filteredTags))
-            Config.defaultHide = [tag for tag in Config.defaults if tag not in defaultIntersect]
+            Config.defaultHide = [
+                tag for tag in Config.defaults if tag not in defaultIntersect]
             Config.defaults = defaultIntersect
             includeIntersect = list(set(Config.includes) & set(filteredTags))
-            Config.includeHide = [tag for tag in Config.includes if tag not in includeIntersect]
+            Config.includeHide = [
+                tag for tag in Config.includes if tag not in includeIntersect]
             Config.includes = includeIntersect
         else:
             Config.excludeHide = []
@@ -958,14 +1002,16 @@ def loadSelectTags(window):
     searchTag.bind("<KeyRelease>", onSearch)
     searchText.bind("<KeyRelease>", onSearch)
 
-    Checkbutton(frame, text="이 태그 분류를 기억하기", variable=Config.rememberTagSort).grid(row=4, column=1, sticky='NSWE')
+    Checkbutton(frame, text="이 태그 분류를 기억하기", variable=Config.rememberTagSort).grid(
+        row=4, column=1, sticky='NSWE')
 
     def loadTagList():
         if not messagebox.askyesno("태그 분류 불러오기",
                                    "사용자가 사전에 분류했던 태그 분류 작업을 적용합니다.\n" +
                                    "기존 분류 작업의 내용은 보존되지 않으며, 불러온 분류 파일로 덮어씌워집니다. 정말 진행할까요?"):
             return
-        fileName = filedialog.askopenfilename(title="불러오기", filetypes=[("태그 분류 작업 파일", "*.tag")])
+        fileName = filedialog.askopenfilename(
+            title="불러오기", filetypes=[("태그 분류 작업 파일", "*.tag")])
         if fileName == "":
             return
         try:
@@ -991,16 +1037,20 @@ def loadSelectTags(window):
             excludeVar.set(sorted(Config.excludes))
             defaultVar.set(sorted(Config.defaults))
             includeVar.set(sorted(Config.includes))
-            messagebox.showinfo("불러오기 완료", "태그 분류를 성공적으로 불러왔습니다. 기존 작업은 버려졌습니다.")
+            messagebox.showinfo(
+                "불러오기 완료", "태그 분류를 성공적으로 불러왔습니다. 기존 작업은 버려졌습니다.")
         except FileNotFoundError:
-            messagebox.showerror("파일을 열 수 없습니다.", "파일을 여는 중 오류가 발생했습니다.\n파일이 삭제되었거나 이동되었을 수 있습니다.")
+            messagebox.showerror(
+                "파일을 열 수 없습니다.", "파일을 여는 중 오류가 발생했습니다.\n파일이 삭제되었거나 이동되었을 수 있습니다.")
             return
         except IndexError:
-            messagebox.showerror("분류 파일 불러오기 실패", "분류 파일을 불러오는 데 실패하였습니다.\n분류 파일의 형식이 잘못되었을 수 있습니다.")
+            messagebox.showerror(
+                "분류 파일 불러오기 실패", "분류 파일을 불러오는 데 실패하였습니다.\n분류 파일의 형식이 잘못되었을 수 있습니다.")
             return
 
     def saveTagList():
-        fileName = filedialog.asksaveasfilename(title="저장", filetypes=[("태그 분류 작업 파일", "*.tag")])
+        fileName = filedialog.asksaveasfilename(
+            title="저장", filetypes=[("태그 분류 작업 파일", "*.tag")])
         if fileName == "":
             messagebox.showerror("저장 취소", "저장을 취소하였습니다.")
             return
@@ -1038,18 +1088,22 @@ def loadSelectExport(window):
         Grid.columnconfigure(frame, i, weight=1)
 
     Label(frame, text="결과를 저장할 폴더의 이름을 지정하세요").grid(row=0, column=0)
-    Entry(frame, textvariable=Config.exportDirName, justify='center').grid(row=1, column=0, sticky='EW')
+    Entry(frame, textvariable=Config.exportDirName,
+          justify='center').grid(row=1, column=0, sticky='EW')
 
     Label(frame, text="결과 파일의 이름을 지정하세요 (.xml / .xlsx와 같은 확장자를 붙일 필요는 없습니다.)").grid(row=2, column=0)
-    Entry(frame, textvariable=Config.exportFileName, justify='center').grid(row=3, column=0, sticky='EW')
+    Entry(frame, textvariable=Config.exportFileName,
+          justify='center').grid(row=3, column=0, sticky='EW')
 
     Label(frame, text="추출한 노드의 출력 방식 지정").grid(row=4, column=0)
     row5Frame = Frame(frame)
     row5Frame.grid(row=5, column=0)
-    Radiobutton(row5Frame, text="xml [원문]", value=EXPORT_XML_PLAIN, variable=Config.exportType).grid(row=0, column=0)
+    Radiobutton(row5Frame, text="xml [원문]", value=EXPORT_XML_PLAIN,
+                variable=Config.exportType).grid(row=0, column=0)
     Radiobutton(row5Frame, text="xml [원문 주석 + TODO]", value=EXPORT_XML_ANNOTATION, variable=Config.exportType).grid(
         row=0, column=1)
-    Radiobutton(row5Frame, text="xlsx [림왈도 서식]", value=EXPORT_XLSX, variable=Config.exportType).grid(row=0, column=2)
+    Radiobutton(row5Frame, text="xlsx [림왈도 서식]", value=EXPORT_XLSX,
+                variable=Config.exportType).grid(row=0, column=2)
 
     Label(frame, text="결과 폴더와 파일명이 일치할 경우 파일의 작업 방법").grid(row=6, column=0)
     row7Frame = Frame(frame)
@@ -1064,7 +1118,8 @@ def loadSelectExport(window):
                 "파일 충돌이 발생할 경우, 해당 파일의 내용을 새로 작성하되, 기존 파일에 같은 태그가 있을 경우 해당 내용을 보존합니다. " +
                 "추출기가 추출하지 않았지만 존재했던 내용은 버려집니다."]
     for i, (text, tooltip) in enumerate(zip(btnTexts, tooltips)):
-        tmp = Radiobutton(row7Frame, text=text, value=i, variable=Config.collisionOption)
+        tmp = Radiobutton(row7Frame, text=text, value=i,
+                          variable=Config.collisionOption)
         CreateToolTip(tmp, tooltip)
         tmp.grid(row=0, column=i)
 
@@ -1125,7 +1180,6 @@ if __name__ == '__main__':
     mainLabel = Label(frame, textvariable=mainTextVar)
     mainLabel.grid(row=0, column=0, rowspan=4, columnspan=4, sticky='NSWE')
 
-
     def onClick(i):
         window.withdraw()
 
@@ -1140,16 +1194,18 @@ if __name__ == '__main__':
         else:
             pass
 
-
-    btn1 = Button(frame, text="1. 림월드 위치 지정", command=lambda: onClick(FRAME_LOCATION_SELECT))
+    btn1 = Button(frame, text="1. 림월드 위치 지정",
+                  command=lambda: onClick(FRAME_LOCATION_SELECT))
     btn1.grid(row=4, column=0, sticky='NSWE', padx=10, pady=5)
-    btn2 = Button(frame, text="2. 추출 모드 선택", command=lambda: onClick(FRAME_MOD_SELECT))
+    btn2 = Button(frame, text="2. 추출 모드 선택",
+                  command=lambda: onClick(FRAME_MOD_SELECT))
     btn2.grid(row=4, column=1, sticky='NSWE', padx=10, pady=5)
-    btn3 = Button(frame, text="3. 출력 노드 선택", command=lambda: onClick(FRAME_NODE_CLASSIFICATION))
+    btn3 = Button(frame, text="3. 출력 노드 선택",
+                  command=lambda: onClick(FRAME_NODE_CLASSIFICATION))
     btn3.grid(row=4, column=2, sticky='NSWE', padx=10, pady=5)
-    btn4 = Button(frame, text="4. 출력 옵션 지정", command=lambda: onClick(FRAME_EXPORT_OPTION))
+    btn4 = Button(frame, text="4. 출력 옵션 지정",
+                  command=lambda: onClick(FRAME_EXPORT_OPTION))
     btn4.grid(row=4, column=3, sticky='NSWE', padx=10, pady=5)
-
 
     def exportXml():
         for ch in "\\/:*?\"<>|":
@@ -1165,8 +1221,11 @@ if __name__ == '__main__':
             if isThereNoIncludes:
                 continue  # pass the class
 
-            filename = Config.exportDirName.get() + f'/Languages/{LANGUAGE}/DefInjected/' + className + '/' + Config.exportFileName.get() + '.xml'
-            Path('/'.join(filename.split('/')[:-1])).mkdir(parents=True, exist_ok=True)
+            filename = Config.exportDirName.get() + \
+                f'/Languages/{LANGUAGE}/DefInjected/' + className + \
+                '/' + Config.exportFileName.get() + '.xml'
+            Path('/'.join(filename.split('/')[:-1])
+                 ).mkdir(parents=True, exist_ok=True)
 
             if Config.collisionOption.get() == 0:  # collision -> stop
                 try:
@@ -1180,7 +1239,8 @@ if __name__ == '__main__':
                 try:
                     for node in list(et.parse(filename).getroot()):
                         if list(node):
-                            alreadyDefinedDict[node.tag] = [li.text for li in list(node)]
+                            alreadyDefinedDict[node.tag] = [
+                                li.text for li in list(node)]
                         elif node.text != "TODO":
                             alreadyDefinedDict[node.tag] = node.text
                 except FileNotFoundError:
@@ -1197,7 +1257,8 @@ if __name__ == '__main__':
                             del alreadyDefinedDict[tag]
                         except TypeError:
                             pass
-                        tmp = [f'    <!-- {text_i} -->{WORD_NEWLINE}    <li>TODO</li>' for text_i in text]
+                        tmp = [
+                            f'    <!-- {text_i} -->{WORD_NEWLINE}    <li>TODO</li>' for text_i in text]
                         writingTextList.append(
                             f"  <{tag}>\n{WORD_NEWLINE.join(tmp)}\n  </{tag}>"
                             if Config.exportType.get() == 1
@@ -1214,14 +1275,16 @@ if __name__ == '__main__':
                                                    else f"  <{tag}>{text}</{tag}>")
 
             with open(filename, 'w', encoding='UTF8') as fin:
-                fin.write("""<?xml version="1.0" encoding="utf-8"?>\n<LanguageData>\n""")
+                fin.write(
+                    """<?xml version="1.0" encoding="utf-8"?>\n<LanguageData>\n""")
                 fin.write('\n'.join(writingTextList))
                 if Config.collisionOption.get() == 2 and alreadyDefinedDict:  # collision -> merge
                     fin.write("\n\n  <!-- 알파의 추출기는 추출하지 않았지만 이미 존재했던 노드들 \n\n")
                     for tag, text in alreadyDefinedDict.items():
                         if type(text) == list:
                             fin.write(f"  <{tag}>\n")
-                            fin.write('\n'.join([f"    <li>{eachText}</li>" for eachText in text]))
+                            fin.write(
+                                '\n'.join([f"    <li>{eachText}</li>" for eachText in text]))
                             fin.write(f"\n  </{tag}>\n")
                         else:
                             fin.write(f"  <{tag}>{text}</{tag}>\n")
@@ -1232,8 +1295,10 @@ if __name__ == '__main__':
 
         # Keyed
         if len(dict_keyed) > 0:
-            filename = Config.exportDirName.get() + f'/Languages/{LANGUAGE}/Keyed/' + Config.exportFileName.get() + '.xml'
-            Path('/'.join(filename.split('/')[:-1])).mkdir(parents=True, exist_ok=True)
+            filename = Config.exportDirName.get(
+            ) + f'/Languages/{LANGUAGE}/Keyed/' + Config.exportFileName.get() + '.xml'
+            Path('/'.join(filename.split('/')[:-1])
+                 ).mkdir(parents=True, exist_ok=True)
 
             if Config.collisionOption.get() == 0:  # collision -> stop
                 try:
@@ -1250,7 +1315,8 @@ if __name__ == '__main__':
                             messagebox.showerror("기존 번역에서 내부 노드 발견됨",
                                                  "본 프로그램은 Keyed 파일의 텍스트에 하위 노드(<>)가 없는 것으로 가정하였습니다. " +
                                                  "해당 노드의 번역은 보존되지 않았을 수 있습니다.")
-                            alreadyDefinedDict[node.tag] = [li.text for li in list(node)]
+                            alreadyDefinedDict[node.tag] = [
+                                li.text for li in list(node)]
                         elif node.text != "TODO":
                             alreadyDefinedDict[node.tag] = node.text
                 except FileNotFoundError:
@@ -1270,14 +1336,16 @@ if __name__ == '__main__':
                                            else f"  <{tag}>{text}</{tag}>")
 
             with open(filename, 'w', encoding='UTF8') as fin:
-                fin.write("""<?xml version="1.0" encoding="utf-8"?>\n<LanguageData>\n""")
+                fin.write(
+                    """<?xml version="1.0" encoding="utf-8"?>\n<LanguageData>\n""")
                 fin.write('\n'.join(writingTextList))
                 if Config.collisionOption.get() == 2 and alreadyDefinedDict:  # collision -> merge
                     fin.write("\n\n  <!-- 알파의 추출기는 추출하지 않았지만 이미 존재했던 노드들 \n\n")
                     for tag, text in alreadyDefinedDict.items():
                         if type(text) == list:
                             fin.write(f"  <{tag}>\n")
-                            fin.write('\n'.join([f"    <li>{eachText}</li>" for eachText in text]))
+                            fin.write(
+                                '\n'.join([f"    <li>{eachText}</li>" for eachText in text]))
                             fin.write(f"\n  </{tag}>\n")
                         else:
                             fin.write(f"  <{tag}>{text}</{tag}>\n")
@@ -1289,7 +1357,7 @@ if __name__ == '__main__':
         # Strings
         for departure in Config.list_strings:
             destination = Config.exportDirName.get() + f"/Languages/{LANGUAGE}/" + \
-                          departure.split('Languages\\English')[1]
+                departure.split('Languages\\English')[1]
             if Config.collisionOption.get() != 1:  # collision -> not overwrite
                 try:
                     with open(destination, 'r', encoding='UTF8') as _:
@@ -1297,14 +1365,14 @@ if __name__ == '__main__':
                 except FileNotFoundError:
                     pass
 
-            Path('\\'.join(destination.split('\\')[:-1])).mkdir(parents=True, exist_ok=True)
+            Path('\\'.join(destination.split('\\')[
+                 :-1])).mkdir(parents=True, exist_ok=True)
             shutil.copy(departure, destination)
 
         if Config.list_strings:
             savedList.append("Strings")
 
         return 0, savedList
-
 
     def exportXlsx():
         filename = Config.exportDirName.get() + '/' + Config.exportFileName.get() + '.xlsx'
@@ -1325,7 +1393,8 @@ if __name__ == '__main__':
                             alreadyDefinedDict[row[0]] = {row[1]: row[3]}
 
         try:
-            Path('/'.join(filename.split('/')[:-1])).mkdir(parents=True, exist_ok=True)
+            Path('/'.join(filename.split('/')[:-1])
+                 ).mkdir(parents=True, exist_ok=True)
         except NotADirectoryError:
             return 4
 
@@ -1337,7 +1406,8 @@ if __name__ == '__main__':
                        for tag, (lastTag, text) in tag_dict.items()
                        if lastTag in Config.includes]
 
-        writingList += [('Keyed', tag, text) for tag, text in dict_keyed.items()]
+        writingList += [('Keyed', tag, text)
+                        for tag, text in dict_keyed.items()]
 
         fill = PatternFill(fill_type='solid', fgColor='ffffff')
 
@@ -1350,15 +1420,20 @@ if __name__ == '__main__':
             ws.cell(row=1, column=j).fill = fill
 
         ws.cell(row=1, column=6).value = "Configs [Not chosen]"
-        ws.cell(row=1, column=6).fill = PatternFill(fill_type='solid', fgColor='a6a6a6')
+        ws.cell(row=1, column=6).fill = PatternFill(
+            fill_type='solid', fgColor='a6a6a6')
         ws.cell(row=2, column=6).value = "pakageID"
-        ws.cell(row=2, column=6).fill = PatternFill(fill_type='solid', fgColor='f79646')
+        ws.cell(row=2, column=6).fill = PatternFill(
+            fill_type='solid', fgColor='f79646')
         ws.cell(row=3, column=6).value = Config.pakageID
-        ws.cell(row=3, column=6).fill = PatternFill(fill_type='solid', fgColor='ffff00')
+        ws.cell(row=3, column=6).fill = PatternFill(
+            fill_type='solid', fgColor='ffff00')
         ws.cell(row=4, column=6).value = "modName (folderName)"
-        ws.cell(row=4, column=6).fill = PatternFill(fill_type='solid', fgColor='f79646')
+        ws.cell(row=4, column=6).fill = PatternFill(
+            fill_type='solid', fgColor='f79646')
         ws.cell(row=5, column=6).value = Config.modName
-        ws.cell(row=5, column=6).fill = PatternFill(fill_type='solid', fgColor='ffff00')
+        ws.cell(row=5, column=6).fill = PatternFill(
+            fill_type='solid', fgColor='ffff00')
 
         for i, (className, tag, text) in enumerate(writingList):
             ws.cell(row=i + 2, column=1).value = className + '+' + tag
@@ -1370,7 +1445,8 @@ if __name__ == '__main__':
 
             if alreadyDefinedDict:
                 try:
-                    ws.cell(row=i + 2, column=5).value = alreadyDefinedDict[className][tag]
+                    ws.cell(
+                        row=i + 2, column=5).value = alreadyDefinedDict[className][tag]
                     ws.cell(row=i + 2, column=5).fill = fill
                 except KeyError:
                     pass
@@ -1384,7 +1460,8 @@ if __name__ == '__main__':
 
         # Strings
         for departure in Config.list_strings:
-            destination = Config.exportDirName.get() + departure.split('Languages\\English')[1]
+            destination = Config.exportDirName.get(
+            ) + departure.split('Languages\\English')[1]
             if Config.collisionOption.get() != 1:  # collision -> not overwrite
                 try:
                     with open(destination, 'r', encoding='UTF8') as _:
@@ -1392,11 +1469,11 @@ if __name__ == '__main__':
                 except FileNotFoundError:
                     pass
 
-            Path('\\'.join(destination.split('\\')[:-1])).mkdir(parents=True, exist_ok=True)
+            Path('\\'.join(destination.split('\\')[
+                 :-1])).mkdir(parents=True, exist_ok=True)
             shutil.copy(departure, destination)
 
         return 0
-
 
     def export():
         if not Config.modName:
@@ -1419,9 +1496,11 @@ if __name__ == '__main__':
             if result == 0:
                 messagebox.showinfo("퍼일 저장 완료", "작업이 완료되었습니다.")
             elif result == 1:
-                messagebox.showerror("파일 충돌 발견됨", "작업 폴더의 파일이 존재하여 작업을 중단하였습니다.")
+                messagebox.showerror(
+                    "파일 충돌 발견됨", "작업 폴더의 파일이 존재하여 작업을 중단하였습니다.")
             elif result == 2:
-                messagebox.showerror("파일 저장 오류", "엑셀 파일이 열려있어(혹은 쓰기 금지되어) 저장에 실패하였습니다.")
+                messagebox.showerror(
+                    "파일 저장 오류", "엑셀 파일이 열려있어(혹은 쓰기 금지되어) 저장에 실패하였습니다.")
             elif result == 3:
                 messagebox.showerror("파일 저장 오류",
                                      "출력 파일의 이름에서 \\ / : * ? \" < > | 중 하나 이상의 문자열이 발견되었습니다. 해당 문자열을 제거해 주세요.")
@@ -1430,39 +1509,40 @@ if __name__ == '__main__':
                                      "출력 폴더의 이름에서 \\ / : * ? \" < > | 중 하나 이상의 문자열이 발견되었습니다. 해당 문자열을 제거해 주세요.")
             return
 
-
     btn = Button(frame, text="5. 추출한 노드 출력하기", command=export)
     btn.grid(row=5, column=1, columnspan=2, padx=10, pady=5, sticky='NSWE')
-
 
     def convert_xlsx_2_xml():
         if filename := filedialog.askopenfilename(initialdir='./'):
             convertXLSX2XML(filename)
 
-
-    convert_xlsx_2_xml_Btn = Button(frame, text="(XLSX -> XML)", command=convert_xlsx_2_xml)
-    convert_xlsx_2_xml_Btn.grid(row=5, column=3, padx=10, pady=5, sticky='NSWE')
-
+    convert_xlsx_2_xml_Btn = Button(
+        frame, text="(XLSX -> XML)", command=convert_xlsx_2_xml)
+    convert_xlsx_2_xml_Btn.grid(
+        row=5, column=3, padx=10, pady=5, sticky='NSWE')
 
     def convert_xml_2_xlsx():
         if dirname := filedialog.askdirectory(initialdir='./'):
             convertXML2XLSX(dirname)
 
-
-    convert_xml_2_xlsx_Btn = Button(frame, text="(XML -> XLSX)", command=convert_xml_2_xlsx)
-    convert_xml_2_xlsx_Btn.grid(row=5, column=0, padx=10, pady=5, sticky='NSWE')
+    convert_xml_2_xlsx_Btn = Button(
+        frame, text="(XML -> XLSX)", command=convert_xml_2_xlsx)
+    convert_xml_2_xlsx_Btn.grid(
+        row=5, column=0, padx=10, pady=5, sticky='NSWE')
     convert_xml_2_xlsx_Btn['state'] = 'disabled'
 
     try:
         versionURL = "https://raw.githubusercontent.com/dlgks224/AlphaExtractor/master/CURRENT_VERSION"
-        serverVersion = urllib.request.urlopen(versionURL).read().decode("utf-8").replace('\n', '')
+        serverVersion = urllib.request.urlopen(
+            versionURL).read().decode("utf-8").replace('\n', '')
         if EXTRACTOR_VERSION != serverVersion:
             if messagebox.askyesno("업데이트 가능",
                                    "새로운 버전의 추출기가 발견되었습니다.\n\n" +
                                    f"업데이트 버전 : {EXTRACTOR_VERSION} -> {serverVersion}\n\n다운로드 페이지를 열까요?"):
                 import webbrowser
 
-                webbrowser.open_new('https://github.com/dlgks224/AlphaExtractor/releases')
+                webbrowser.open_new(
+                    'https://github.com/dlgks224/AlphaExtractor/releases')
                 exit(0)
     except (urllib.error.HTTPError, urllib.error.URLError):
         pass
