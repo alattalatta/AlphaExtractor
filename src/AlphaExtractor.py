@@ -1,3 +1,4 @@
+import csv
 import glob
 import io
 import os
@@ -8,9 +9,6 @@ import xml.etree.ElementTree as et
 from pathlib import Path
 from tkinter import StringVar, IntVar, Grid, Entry, Label, Listbox, Toplevel, Text, Button, Radiobutton, Frame, Tk, \
     filedialog, messagebox, font, Checkbutton
-
-from openpyxl import load_workbook, Workbook
-from openpyxl.styles import PatternFill
 
 RIMWORLD_VERSION = '1.3'
 LANGUAGE = 'Korean (한국어)'
@@ -23,7 +21,7 @@ WORD_BACKSLASH = '\\'
 
 EXPORT_XML_PLAIN = 0
 EXPORT_XML_ANNOTATION = 1
-EXPORT_XLSX = 2
+EXPORT_CSV = 2
 
 FRAME_EXIT = -1
 FRAME_MAIN = 0
@@ -63,7 +61,7 @@ class Configures:
         # Volatile Configs
         self.extractPathList = []
         self.modName = ""
-        self.pakageID = ""
+        self.packageID = ""
         self.excludes = []
         self.defaults = []
         self.includes = []
@@ -115,7 +113,7 @@ Excluded tags [string, split with '/']
 {'/'.join(self.definedExcludes)}
 Included tags [string, split with '/']
 {'/'.join(self.definedIncludes)}
-Export type [int, 0:xml(plain text), 1:xml(annotated text + "TODO"), 2:xlsx(RimWaldo_format)]
+Export type [int, 0:xml(plain text), 1:xml(annotated text + "TODO"), 2:csv(RimWaldo_format)]
 {self.exportType.get()}
 Option file collision  [int, 0:Stop, 1:Overwrite, 2:Merge, 3:Refer]
 {self.collisionOption.get()}"""
@@ -239,55 +237,37 @@ def report(text):
         fout.write('\n')
 
 
-def convertXML2XLSX(dirname):
-    if dirname or dirname == "":
-        messagebox.showinfo("미지원", "현재 지원하지 않는 기능입니다.")
+def csv2xml(filename):
+    modName = ''
+    packageID = ''
+
+    with open(filename, 'r', encoding='utf8', newline='') as csvfile:
+        reader = csv.reader(csvfile)
+
+        xmlDict = {}
+        for i, (_, className, nodeName, _, translation, *rest) in enumerate(reader):
+            # 첫 행 제외
+            if i == 0:
+                continue
+
+            if len(rest) >= 1:
+                if i == 2:
+                    packageID = rest[0]
+                elif i == 4:
+                    modName = rest[0]
+
+            if translation:
+                if className not in xmlDict:
+                    xmlDict[className] = {nodeName: translation}
+                else:
+                    xmlDict[className][nodeName] = translation
+
+    if (not modName or not packageID):
+        messagebox.showinfo(
+            "올바르지 않은 파일", "CSV 파일에서 modName 또는 packageID를 찾을 수 없습니다.")
         return
 
-    with open(dirname, "rb") as f:
-        ioFile = io.BytesIO(f.read())
-    ws = load_workbook(ioFile, read_only=True).active
-    xmlDict = {}
-    for className, nodeName, _, translation in ws.iter_rows(min_row=2, min_col=2, max_col=5, values_only=True):
-        if translation:
-            if className not in xmlDict:
-                xmlDict[className] = {nodeName: translation}
-            else:
-                xmlDict[className][nodeName] = translation
-
     for className, nodeDict in xmlDict.items():
-        saveDir = '/'.join(dirname.split('/')
-                           [:-1]) + f'/Languages/{LANGUAGE}/DefInjected/{className}'
-        Path(saveDir).mkdir(parents=True, exist_ok=True)
-        with open(f"{saveDir}/{dirname.split('/')[-1].split('.')[0] + '.xml'}", 'w', encoding='UTF8') as fout:
-            fout.write(
-                """<?xml version="1.0" encoding="utf-8"?>\n<LanguageData>\n""")
-            for nodeName, translation in nodeDict.items():
-                fout.write(f'  <{nodeName}>{translation}</{nodeName}>\n')
-            fout.write("</LanguageData>")
-
-    messagebox.showinfo("작업 완료", "XML 변환이 완료되었습니다.")
-
-
-def convertXLSX2XML(filename):
-    with open(filename, "rb") as f:
-        ioFile = io.BytesIO(f.read())
-    ws = load_workbook(ioFile, read_only=True).active
-    xmlDict = {}
-    for className, nodeName, _, translation in ws.iter_rows(min_row=2, min_col=2, max_col=5, values_only=True):
-        # _ == original text
-        if className and nodeName and translation:
-            if className not in xmlDict:
-                xmlDict[className] = {nodeName: translation}
-            else:
-                xmlDict[className][nodeName] = translation
-
-    modName = ws.cell(row=5, column=6).value
-    modName = "".join(filter(lambda ch: ch not in "\\/:*?\"<>|", modName)) if modName else \
-        filename.split('/')[-1].split('.')[0]
-
-    for className, nodeDict in xmlDict.items():
-
         if className == 'Keyed':
             saveDir = f'{modName}/Languages/{LANGUAGE}/Keyed'
         else:
@@ -300,9 +280,8 @@ def convertXLSX2XML(filename):
                 fout.write(f'  <{nodeName}>{translation}</{nodeName}>\n')
             fout.write("</LanguageData>")
 
-    if pakageID := ws.cell(row=3, column=6).value:
-        with open(f"{modName}/AddThisLoadFolders.xml", 'w', encoding='UTF8') as fout:
-            fout.write(f"""<li IfModActive="{pakageID}">{modName}</li>""")
+    with open(f"{modName}/AddThisLoadFolders.xml", 'w', encoding='UTF8') as fout:
+        fout.write(f"""<li IfModActive="{packageID}">{modName}</li>""")
 
     messagebox.showinfo("작업 완료", "XML 변환이 완료되었습니다.")
 
@@ -412,11 +391,11 @@ def loadSelectMod(window):
     sep = ' | '
     for modPath in corePathList:
         try:
-            pakageID = et.parse(
+            packageID = et.parse(
                 modPath + '/About/About.xml').getroot().find('packageId').text
         except (FileNotFoundError, ValueError, AttributeError, et.ParseError):
-            pakageID = "NULL"
-        modsNameDict[f"    CORE   {sep}{modPath.split('/')[-1]}"] = modPath, f"{modPath.split('/')[-1]}", pakageID
+            packageID = "NULL"
+        modsNameDict[f"    CORE   {sep}{modPath.split('/')[-1]}"] = modPath, f"{modPath.split('/')[-1]}", packageID
     for modPath in manualModPathList + workshopModPathList:
         try:
             with open(modPath + '/About/PublishedFileId.txt') as fin:
@@ -427,16 +406,16 @@ def loadSelectMod(window):
             except (FileNotFoundError, ValueError):
                 code = " ??????????"
         try:
-            pakageID = et.parse(
+            packageID = et.parse(
                 modPath + '/About/About.xml').getroot().find('packageId').text
         except (FileNotFoundError, ValueError, AttributeError, et.ParseError):
-            pakageID = "NULL(About.xml ERROR)"
+            packageID = "NULL(About.xml ERROR)"
         try:
             name = et.parse(
                 modPath + '/About/About.xml').getroot().find('name').text
         except (FileNotFoundError, ValueError, AttributeError, et.ParseError):
             name = "#UNKNOWN# (About.xml ERROR)"
-        modsNameDict[f"{code}{sep}{name}"] = modPath, f"{name} - {code.replace(' ', '')}", pakageID
+        modsNameDict[f"{code}{sep}{name}"] = modPath, f"{name} - {code.replace(' ', '')}", packageID
     modsNameDictKeys = list(modsNameDict.keys())
     modsNameDictKeys.sort(key=lambda x: x.split(sep)[1])
     modListBoxValue.set(modsNameDictKeys)
@@ -445,12 +424,12 @@ def loadSelectMod(window):
     extractableDirNameList = []
 
     modName = ""
-    pakageID = ""
+    packageID = ""
 
     def onModSelect(evt):
         try:
-            nonlocal modName, pakageID
-            modPath, modName, pakageID = modsNameDict[evt.widget.get(
+            nonlocal modName, packageID
+            modPath, modName, packageID = modsNameDict[evt.widget.get(
                 int(evt.widget.curselection()[0]))]
         except IndexError:
             return
@@ -525,7 +504,7 @@ def loadSelectMod(window):
             messagebox.showerror("폴더를 선택하세요", "추출할 폴더를 하나 이상 선택하세요.")
             return
         Config.modName = modName
-        Config.pakageID = pakageID
+        Config.packageID = packageID
         Config.exportDirName.set(
             "".join(filter(lambda ch: ch not in "\\/:*?\"<>|", modName)))
         Config.exportFileName.set(
@@ -1091,7 +1070,7 @@ def loadSelectExport(window):
     Entry(frame, textvariable=Config.exportDirName,
           justify='center').grid(row=1, column=0, sticky='EW')
 
-    Label(frame, text="결과 파일의 이름을 지정하세요 (.xml / .xlsx와 같은 확장자를 붙일 필요는 없습니다.)").grid(row=2, column=0)
+    Label(frame, text="결과 파일의 이름을 지정하세요 (.xml / .csv 같은 확장자를 붙일 필요는 없습니다.)").grid(row=2, column=0)
     Entry(frame, textvariable=Config.exportFileName,
           justify='center').grid(row=3, column=0, sticky='EW')
 
@@ -1102,7 +1081,7 @@ def loadSelectExport(window):
                 variable=Config.exportType).grid(row=0, column=0)
     Radiobutton(row5Frame, text="xml [원문 주석 + TODO]", value=EXPORT_XML_ANNOTATION, variable=Config.exportType).grid(
         row=0, column=1)
-    Radiobutton(row5Frame, text="xlsx [림왈도 서식]", value=EXPORT_XLSX,
+    Radiobutton(row5Frame, text="csv [림왈도 서식]", value=EXPORT_CSV,
                 variable=Config.exportType).grid(row=0, column=2)
 
     Label(frame, text="결과 폴더와 파일명이 일치할 경우 파일의 작업 방법").grid(row=6, column=0)
@@ -1114,7 +1093,7 @@ def loadSelectExport(window):
                 "파일 충돌이 발생할 경우, 해당 파일을 내용을 삭제하고 새로 작성합니다. " +
                 "이 경우, 기존 파일을 복구할 수 없으므로 사전 백업이 권장됩니다.",
                 "파일 충돌이 발생할 경우, 해당 파일에 새로운 태그들을 추가해 병합합니다. " +
-                "추출기가 추출하지 않았지만 존재했던 내용은 파일의 하단에 출력됩니다. xlsx 출력 모드에서는 참조하기로 적용됩니다.",
+                "추출기가 추출하지 않았지만 존재했던 내용은 파일의 하단에 출력됩니다. csv 출력 모드에서는 참조하기로 적용됩니다.",
                 "파일 충돌이 발생할 경우, 해당 파일의 내용을 새로 작성하되, 기존 파일에 같은 태그가 있을 경우 해당 내용을 보존합니다. " +
                 "추출기가 추출하지 않았지만 존재했던 내용은 버려집니다."]
     for i, (text, tooltip) in enumerate(zip(btnTexts, tooltips)):
@@ -1138,7 +1117,7 @@ version = {EXTRACTOR_VERSION}
 출력 폴더 위치: {Config.exportDirName.get() if Config.exportDirName.get() else "지정되지 않음"}
 출력 파일 이름: {Config.exportFileName.get() if Config.exportFileName.get() else "지정되지 않음"}
 
-출력 형식: {"인게임에 바로 적용 가능한 xml 파일" if Config.exportType.get() != 2 else "크라우딘에 업로드 할 수 있는 xlsx 파일"}
+출력 형식: {"인게임에 바로 적용 가능한 xml 파일" if Config.exportType.get() != 2 else "크라우딘에 업로드 할 수 있는 csv 파일"}
 
 파일 충돌 시: {"파일 출력을 중단하고 경고창을 표시함" if Config.collisionOption.get() == 0 else "기존 파일을 삭제하고 덮어씀" if Config.collisionOption.get() == 1 else "기존 파일의 노드와 추출한 노드를 함께 출력" if Config.collisionOption.get() == 2 else "기존 파일의 노드는 번역만 참고하고 추출한 노드만 출력"}
 
@@ -1374,32 +1353,28 @@ if __name__ == '__main__':
 
         return 0, savedList
 
-    def exportXlsx():
-        filename = Config.exportDirName.get() + '/' + Config.exportFileName.get() + '.xlsx'
+    def exportCSV():
+        filename = Config.exportDirName.get() + '/' + Config.exportFileName.get() + '.csv'
 
-        alreadyDefinedDict = {}
+        # alreadyDefinedDict: dict[str, str] = {}
         if os.path.exists(filename):
-            if Config.collisionOption.get() == 0:  # collision -> stop
+            if Config.collisionOption.get() == 0:
                 return 1
+            """
+            기존 번역 병합, 나중에 요청 들어오면 복구
             if Config.collisionOption.get() > 1:
-                with open(filename, "rb") as f:
-                    ioFile = io.BytesIO(f.read())
-                ws = load_workbook(ioFile, read_only=True).active
-                for row in ws.iter_rows(min_row=2, min_col=2, max_col=5, values_only=True):
-                    if any(row):
-                        try:
-                            alreadyDefinedDict[row[0]][row[1]] = row[3]
-                        except KeyError:
-                            alreadyDefinedDict[row[0]] = {row[1]: row[3]}
+                with open(filename, encoding='utf8', newline='') as csvfile:
+                    reader = csv.reader(csvfile)
+                    for i, row in enumerate(reader):
+                        if i > 0 and row[4]:
+                            alreadyDefinedDict[row[0]] = row[4]
+            """
 
         try:
             Path('/'.join(filename.split('/')[:-1])
                  ).mkdir(parents=True, exist_ok=True)
         except NotADirectoryError:
             return 4
-
-        wb = Workbook()
-        ws = wb.active
 
         writingList = [(className, tag, text)
                        for className, tag_dict in dict_class.items()
@@ -1409,50 +1384,28 @@ if __name__ == '__main__':
         writingList += [('Keyed', tag, text)
                         for tag, text in dict_keyed.items()]
 
-        fill = PatternFill(fill_type='solid', fgColor='ffffff')
-
-        ws.cell(row=1, column=1).value = "Class+Node [(Identifier (Key)]"
-        ws.cell(row=1, column=2).value = "Class [Not chosen]"
-        ws.cell(row=1, column=3).value = "Node [Not chosen]"
-        ws.cell(row=1, column=4).value = "EN [Source string]"
-        ws.cell(row=1, column=5).value = "KO [Translation]"
-        for j in range(1, 6):
-            ws.cell(row=1, column=j).fill = fill
-
-        ws.cell(row=1, column=6).value = "Configs [Not chosen]"
-        ws.cell(row=1, column=6).fill = PatternFill(
-            fill_type='solid', fgColor='a6a6a6')
-        ws.cell(row=2, column=6).value = "pakageID"
-        ws.cell(row=2, column=6).fill = PatternFill(
-            fill_type='solid', fgColor='f79646')
-        ws.cell(row=3, column=6).value = Config.pakageID
-        ws.cell(row=3, column=6).fill = PatternFill(
-            fill_type='solid', fgColor='ffff00')
-        ws.cell(row=4, column=6).value = "modName (folderName)"
-        ws.cell(row=4, column=6).fill = PatternFill(
-            fill_type='solid', fgColor='f79646')
-        ws.cell(row=5, column=6).value = Config.modName
-        ws.cell(row=5, column=6).fill = PatternFill(
-            fill_type='solid', fgColor='ffff00')
-
-        for i, (className, tag, text) in enumerate(writingList):
-            ws.cell(row=i + 2, column=1).value = className + '+' + tag
-            ws.cell(row=i + 2, column=2).value = className
-            ws.cell(row=i + 2, column=3).value = tag
-            ws.cell(row=i + 2, column=4).value = text
-            for j in range(1, 6):
-                ws.cell(row=i + 2, column=j).fill = fill
-
-            if alreadyDefinedDict:
-                try:
-                    ws.cell(
-                        row=i + 2, column=5).value = alreadyDefinedDict[className][tag]
-                    ws.cell(row=i + 2, column=5).fill = fill
-                except KeyError:
-                    pass
-
         try:
-            wb.save(filename)
+            with open(filename, 'w', encoding='utf8', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(
+                    ['Class+Node', 'Class', 'Node', 'EN', 'KO', 'Configs'])
+
+                for i, (className, tag, text) in enumerate(writingList):
+                    meta = ''
+
+                    if i == 0:
+                        meta = 'packageID'
+                    elif i == 1:
+                        meta = Config.packageID
+                    elif i == 2:
+                        meta = 'modName (folderName)'
+                    elif i == 3:
+                        meta = Config.modName
+
+                    # alreadyDefinedItem = alreadyDefinedDict.get(f'{className}+{tag}')
+                    writer.writerow(
+                        # [f'{className}+{tag}', className, tag, text, alreadyDefinedItem])
+                        [f'{className}+{tag}', className, tag, text, '', meta])
         except PermissionError:
             return 2
         except OSError:
@@ -1479,7 +1432,7 @@ if __name__ == '__main__':
         if not Config.modName:
             messagebox.showerror("추출 모드가 선택되지 않음", "하! 이럴 인간이 있을 줄 알았지.")
             return
-        if Config.exportType.get() != EXPORT_XLSX:
+        if Config.exportType.get() != EXPORT_CSV:
             result = exportXml()
             if result[0] == 0:
                 messagebox.showinfo("퍼일 저장 완료",
@@ -1492,7 +1445,7 @@ if __name__ == '__main__':
                 messagebox.showerror("파일 저장 오류",
                                      "출력 파일의 이름에서 \\ / : * ? \" < > | 중 하나 이상의 문자열이 발견되었습니다. 해당 문자열을 제거해 주세요.")
         else:
-            result = exportXlsx()
+            result = exportCSV()
             if result == 0:
                 messagebox.showinfo("퍼일 저장 완료", "작업이 완료되었습니다.")
             elif result == 1:
@@ -1500,7 +1453,7 @@ if __name__ == '__main__':
                     "파일 충돌 발견됨", "작업 폴더의 파일이 존재하여 작업을 중단하였습니다.")
             elif result == 2:
                 messagebox.showerror(
-                    "파일 저장 오류", "엑셀 파일이 열려있어(혹은 쓰기 금지되어) 저장에 실패하였습니다.")
+                    "파일 저장 오류", "CSV 파일이 열려있어(혹은 쓰기 금지되어) 저장에 실패하였습니다.")
             elif result == 3:
                 messagebox.showerror("파일 저장 오류",
                                      "출력 파일의 이름에서 \\ / : * ? \" < > | 중 하나 이상의 문자열이 발견되었습니다. 해당 문자열을 제거해 주세요.")
@@ -1512,24 +1465,14 @@ if __name__ == '__main__':
     btn = Button(frame, text="5. 추출한 노드 출력하기", command=export)
     btn.grid(row=5, column=1, columnspan=2, padx=10, pady=5, sticky='NSWE')
 
-    def convert_xlsx_2_xml():
+    def csv2xml_action():
         if filename := filedialog.askopenfilename(initialdir='./'):
-            convertXLSX2XML(filename)
+            csv2xml(filename)
 
-    convert_xlsx_2_xml_Btn = Button(
-        frame, text="(XLSX -> XML)", command=convert_xlsx_2_xml)
-    convert_xlsx_2_xml_Btn.grid(
+    csv2xml_button = Button(
+        frame, text="(CSV -> XML)", command=csv2xml_action)
+    csv2xml_button.grid(
         row=5, column=3, padx=10, pady=5, sticky='NSWE')
-
-    def convert_xml_2_xlsx():
-        if dirname := filedialog.askdirectory(initialdir='./'):
-            convertXML2XLSX(dirname)
-
-    convert_xml_2_xlsx_Btn = Button(
-        frame, text="(XML -> XLSX)", command=convert_xml_2_xlsx)
-    convert_xml_2_xlsx_Btn.grid(
-        row=5, column=0, padx=10, pady=5, sticky='NSWE')
-    convert_xml_2_xlsx_Btn['state'] = 'disabled'
 
     try:
         versionURL = "https://raw.githubusercontent.com/dlgks224/AlphaExtractor/master/CURRENT_VERSION"
