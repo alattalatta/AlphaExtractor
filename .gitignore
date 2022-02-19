@@ -1,3 +1,5 @@
+env/
+
 src/*/
 src/error_report.txt
 .idea
