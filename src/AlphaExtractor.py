@@ -1,6 +1,5 @@
 import csv
 import glob
-import io
 import os
 import shutil
 import sys
@@ -15,7 +14,7 @@ LANGUAGE = 'Korean (한국어)'
 
 EXTRACTABLE_DIRS = ["Defs", "Languages", "Patches"]
 CONFIG_VERSION = 5
-EXTRACTOR_VERSION = "0.10.11"
+EXTRACTOR_VERSION = "0.10.11-fork"
 WORD_NEWLINE = '\n'
 WORD_BACKSLASH = '\\'
 
@@ -48,7 +47,7 @@ class Configures:
                 self.write(isReset=True)
                 return
             else:
-                exit(0)
+                sys.exit(0)
 
         # Saved Configs
         self.gameDir = StringVar(value=configs[5])
@@ -385,7 +384,7 @@ def loadSelectMod(window):
     if not (corePathList + manualModPathList + workshopModPathList):  # If No Mod
         messagebox.showerror(
             "모드 폴더 찾을 수 없음", "선택한 폴더에 어떤 하위 폴더도 존재하지 않습니다.\n프로그램을 종료합니다.")
-        exit(0)
+        sys.exit(0)
 
     modsNameDict = {}
     sep = ' | '
@@ -1475,10 +1474,20 @@ if __name__ == '__main__':
         row=5, column=3, padx=10, pady=5, sticky='NSWE')
 
     try:
+        def parse_semver(semver: str):
+            return [int(ver) for ver in semver.split('-')[0].split('.')]
+        
+        def compare_semver(a: list[int], b: list[int]):
+            if a[0] > b[0] or a[1] > b[1] or a[2] > b[2]:
+                return 1
+            return -1
+
         versionURL = "https://raw.githubusercontent.com/dlgks224/AlphaExtractor/master/CURRENT_VERSION"
-        serverVersion = urllib.request.urlopen(
-            versionURL).read().decode("utf-8").replace('\n', '')
-        if EXTRACTOR_VERSION != serverVersion:
+        serverVersion = parse_semver(urllib.request.urlopen(
+            versionURL).read().decode("utf-8").replace('\n', ''))
+        localVersion = parse_semver(EXTRACTOR_VERSION)
+        
+        if compare_semver(serverVersion, localVersion) > 0:
             if messagebox.askyesno("업데이트 가능",
                                    "새로운 버전의 추출기가 발견되었습니다.\n\n" +
                                    f"업데이트 버전 : {EXTRACTOR_VERSION} -> {serverVersion}\n\n다운로드 페이지를 열까요?"):
@@ -1486,7 +1495,7 @@ if __name__ == '__main__':
 
                 webbrowser.open_new(
                     'https://github.com/dlgks224/AlphaExtractor/releases')
-                exit(0)
+                sys.exit(0)
     except (urllib.error.HTTPError, urllib.error.URLError):
         pass
 
