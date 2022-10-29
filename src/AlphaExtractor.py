@@ -9,12 +9,12 @@ from pathlib import Path
 from tkinter import StringVar, IntVar, Grid, Entry, Label, Listbox, Toplevel, Text, Button, Radiobutton, Frame, Tk, \
     filedialog, messagebox, font, Checkbutton
 
-RIMWORLD_VERSION = '1.3'
+RIMWORLD_VERSION = '1.4'
 LANGUAGE = 'Korean (한국어)'
 
 EXTRACTABLE_DIRS = ["Defs", "Languages", "Patches"]
 CONFIG_VERSION = 5
-EXTRACTOR_VERSION = "0.10.11-fork"
+EXTRACTOR_VERSION = "0.11.0-fork"
 WORD_NEWLINE = '\n'
 WORD_BACKSLASH = '\\'
 
@@ -1385,6 +1385,8 @@ if __name__ == '__main__':
 
         try:
             with open(filename, 'w', encoding='utf8', newline='') as csvfile:
+                csvfile.write('\ufeff')
+
                 writer = csv.writer(csvfile)
                 writer.writerow(
                     ['Class+Node', 'Class', 'Node', 'EN', 'KO', 'Configs'])
@@ -1476,7 +1478,7 @@ if __name__ == '__main__':
     try:
         def parse_semver(semver: str):
             return [int(ver) for ver in semver.split('-')[0].split('.')]
-        
+
         def compare_semver(a: list[int], b: list[int]):
             if a[0] > b[0] or a[1] > b[1] or a[2] > b[2]:
                 return 1
@@ -1486,7 +1488,7 @@ if __name__ == '__main__':
         serverVersion = parse_semver(urllib.request.urlopen(
             versionURL).read().decode("utf-8").replace('\n', ''))
         localVersion = parse_semver(EXTRACTOR_VERSION)
-        
+
         if compare_semver(serverVersion, localVersion) > 0:
             if messagebox.askyesno("업데이트 가능",
                                    "새로운 버전의 추출기가 발견되었습니다.\n\n" +
